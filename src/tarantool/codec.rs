@@ -86,7 +86,7 @@ fn parse_response(
             )),
         )),
         _ => {
-            let mut response_data =
+            let response_data =
                 TarantoolResponse::new(code, search_key_in_msgpack_map(r, Key::ERROR as u64)?);
             let s: String = response_data.decode()?;
             error!("Tarantool ERROR >> {:?}", s);
