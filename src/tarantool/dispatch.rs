@@ -17,8 +17,8 @@ use tokio::timer::delay_queue;
 use tokio::timer::{Delay, DelayQueue};
 use tokio_codec::{Decoder, Framed};
 
-use tarantool::codec::{RequestId, TarantoolCodec, TarantoolFramedRequest};
-use tarantool::packets::{AuthPacket, CommandPacket, TarantoolRequest, TarantoolResponse};
+use crate::tarantool::codec::{RequestId, TarantoolCodec, TarantoolFramedRequest};
+use crate::tarantool::packets::{AuthPacket, CommandPacket, TarantoolRequest, TarantoolResponse};
 
 pub type TarantoolFramed = Framed<TcpStream, TarantoolCodec>;
 pub type CallbackSender = oneshot::Sender<io::Result<TarantoolResponse>>;

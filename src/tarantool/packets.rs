@@ -2,9 +2,9 @@
 use std::io;
 use std::str;
 
+use crate::tarantool::tools;
 use rmpv::Value;
 use serde::{Deserialize, Serialize};
-use tarantool::tools;
 
 use bytes::{Bytes, IntoBuf};
 

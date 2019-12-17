@@ -1,13 +1,13 @@
+use crate::tarantool::packets::{Code, Key, TarantoolRequest, TarantoolResponse};
+use crate::tarantool::tools::{
+    decode_serde, get_map_value, make_auth_digest, map_err_to_io, search_key_in_msgpack_map,
+    serialize_to_buf_mut, write_u32_to_slice, SafeBytesMutWriter,
+};
 use bytes::{BufMut, Bytes, BytesMut, IntoBuf};
 use rmp::encode;
 use rmpv::{self, decode, Value};
 use std::io;
 use std::str;
-use tarantool::packets::{Code, Key, TarantoolRequest, TarantoolResponse};
-use tarantool::tools::{
-    decode_serde, get_map_value, make_auth_digest, map_err_to_io, search_key_in_msgpack_map,
-    serialize_to_buf_mut, write_u32_to_slice, SafeBytesMutWriter,
-};
 use tokio_codec::{Decoder, Encoder};
 
 pub type RequestId = u64;

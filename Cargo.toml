@@ -1,6 +1,7 @@
 [package]
 name = "rusty_tarantool"
 authors = ["Michael Zheludkov https://github.com/zheludkovm"]
+edition = "2018"
 description = "Tarantul async client based on tokio framework"
 license = "Apache-2.0"
 repository = "https://github.com/zheludkovm/RustyTarantool"
