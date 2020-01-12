@@ -17,6 +17,10 @@ edition = "2018"
 name = "rusty_tarantool"
 path = "src/lib.rs"
 
+[features]
+actix-example = ["actix-web", "url", "serde_json"]
+hyper-example = ["hyper", "url", "serde_json"]
+
 [dependencies]
 maplit = "1.0"
 futures = "0.1"
@@ -38,8 +42,25 @@ base64 = "0.2"
 sha1 = "0.2"
 rustc-serialize = "0.3"
 
-[dev-dependencies]
-hyper = "0.12"
-serde_json = "1.0"
-url = "1.7"
-actix-web = "1.0"
+# required for examples
+hyper = {version = "0.12", optional = true}
+serde_json = {version = "1.0", optional = true}
+url = {version = "1.7", optional = true}
+actix-web = {version = "1.0", optional = true}
+
+[[example]]
+name = "actix-tarantool-proxy"
+required-features = ["actix-example"]
+
+[[example]]
+name = "hyper-tarantool-proxy"
+required-features = ["hyper-example"]
+
+[[example]]
+name = "simple-bench"
+
+[[example]]
+name = "simple-call"
+
+[[example]]
+name = "test-reconnect"
