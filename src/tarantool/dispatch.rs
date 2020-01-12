@@ -7,11 +7,13 @@ use std::string::ToString;
 use std::sync::{Arc, RwLock};
 use std::time::{Duration, Instant};
 
+use futures::channel::mpsc;
+use futures::channel::oneshot;
 use futures::future;
 use futures::stream::{SplitSink, SplitStream};
-use futures::sync::mpsc;
-use futures::sync::oneshot;
-use futures::{Async, AsyncSink, Future, IntoFuture, Poll, Sink, Stream};
+use futures::Future;
+use futures_util::future::IntoFuture;
+use futures_util::{Async, AsyncSink, IntoFuture, Poll, Sink, Stream};
 use tokio::net::tcp::{ConnectFuture, TcpStream};
 use tokio::timer::delay_queue;
 use tokio::timer::{Delay, DelayQueue};

@@ -1,6 +1,7 @@
 use base64;
 use byteorder::ReadBytesExt;
-use bytes::{Buf, BufMut, Bytes, BytesMut};
+use bytes::{buf::ext::BufExt, Buf, BufMut, Bytes, BytesMut};
+use rmp;
 use rmp_serde::{Deserializer, Serializer};
 use rmpv::decode;
 use rmpv::Value;
@@ -42,27 +43,31 @@ pub fn make_map_err_to_io() -> io::Error {
     io::Error::new(io::ErrorKind::Other, "Cant get key from map!")
 }
 
-pub fn search_key_in_msgpack_map(mut r: Cursor<BytesMut>, search_key: u64) -> io::Result<Bytes> {
-    r.read_u8()?;
-    if r.remaining() == 0 {
-        Ok(Bytes::new())
-    } else {
-        while r.remaining() != 0 {
-            let key = decode::read_value(&mut r).map_err(map_err_to_io)?;
-            match key {
-                Value::Integer(k) if k.is_u64() && k.as_u64().unwrap() == search_key => {
-                    let pos = r.position();
-                    let mut res_buf = r.into_inner();
-                    res_buf.split_to(pos as usize);
-                    return Ok(res_buf.freeze());
+pub fn search_key_in_msgpack_map(mut bytes: BytesMut, search_key: u64) -> io::Result<Bytes> {
+    // TODO keep response body as is and parse it in TarantoolResponse::decode()
+    use rmp::{decode::read_marker, Marker};
+    let mut r = bytes.reader();
+    match read_marker(&mut r) {
+        Ok(Marker::FixMap(0)) => Ok(Bytes::new()),
+        Ok(Marker::FixMap(len)) => {
+            let mut result = Err(io::Error::new(io::ErrorKind::Other, "Key not found!"));
+            for _ in 0..len {
+                let key = decode::read_value(&mut r).map_err(map_err_to_io)?;
+                if let Value::Integer(k) = key {
+                    if k.as_u64() == Some(search_key) {
+                        result = Ok(bytes.to_bytes());
+                        break;
+                    }
                 }
-                _ => {}
+                // consume value
+                decode::read_value(&mut r).map_err(map_err_to_io)?;
             }
+            result
         }
-        Err(io::Error::new(
+        _ => Err(io::Error::new(
             io::ErrorKind::Other,
             "Incorrect headers msg pack type!",
-        ))
+        )),
     }
 }
 

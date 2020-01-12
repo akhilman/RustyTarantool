@@ -3,12 +3,13 @@ use crate::tarantool::tools::{
     decode_serde, get_map_value, make_auth_digest, map_err_to_io, search_key_in_msgpack_map,
     serialize_to_buf_mut, write_u32_to_slice, SafeBytesMutWriter,
 };
-use bytes::{BufMut, Bytes, BytesMut, IntoBuf};
+use bytes::{buf::ext::BufExt, Buf, BufMut, Bytes, BytesMut};
+use futures_codec::{Decoder, Encoder};
 use rmp::encode;
 use rmpv::{self, decode, Value};
 use std::io;
+use std::io::Cursor;
 use std::str;
-use tokio_codec::{Decoder, Encoder};
 
 pub type RequestId = u64;
 pub type TarantoolFramedRequest = (RequestId, TarantoolRequest);
@@ -54,7 +55,7 @@ impl Decoder for TarantoolCodec {
             if buf.len() < 5 {
                 Ok(None)
             } else {
-                let size: usize = decode_serde(&buf[0..5])?;
+                let size: usize = decode_serde(&buf[0..5])?; // read body + header size
 
                 if buf.len() - 5 < size {
                     Ok(None)
@@ -70,11 +71,10 @@ fn parse_response(
     buf: &mut BytesMut,
     size: usize,
 ) -> io::Result<(RequestId, io::Result<TarantoolResponse>)> {
-    buf.split_to(5);
-    let response_body = buf.split_to(size);
-    let mut r = response_body.into_buf();
+    buf.split_to(5); // remove body + header size
+    let mut r = buf.split_to(size); // take header and body out of input buffer
 
-    let headers = decode::read_value(&mut r).map_err(map_err_to_io)?;
+    let headers = decode::read_value(&mut r.reader()).map_err(map_err_to_io)?;
     let (code, sync) = parse_headers(headers)?;
 
     match code {
@@ -82,10 +82,12 @@ fn parse_response(
             sync,
             Ok(TarantoolResponse::new(
                 code,
+                // TODO keep response body as is and parse it in TarantoolResponse::decode()
                 search_key_in_msgpack_map(r, Key::DATA as u64)?,
             )),
         )),
         _ => {
+            // TODO keep response body as is and parse it in TarantoolResponse::decode()
             let response_data =
                 TarantoolResponse::new(code, search_key_in_msgpack_map(r, Key::ERROR as u64)?);
             let s: String = response_data.decode()?;

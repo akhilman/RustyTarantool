@@ -1,10 +1,10 @@
 use std::io;
 use std::sync::{Arc, Mutex, RwLock};
 
+use futures::channel::mpsc;
+use futures::channel::oneshot;
 use futures::stream::Stream;
-use futures::sync::mpsc;
-use futures::sync::oneshot;
-use futures::{Future, IntoFuture};
+use futures::Future;
 use serde::Serialize;
 use tokio;
 
